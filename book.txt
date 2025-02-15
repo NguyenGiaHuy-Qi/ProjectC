@@ -1,0 +1,10 @@
+A01,Nha Gia Kim,Paulo Coelho,120000,1998,6
+A02,Dac Nhan Tam,Dale Carnegie,150000,1936,7
+A03,Nghi Giau Lam Giau,Napoleon Hill,180000,1937,3
+A04,Cha Giau Cha Ngheo,Robert Kiyosaki,200000,1997,6
+A05,Ca Phe Cung Tony,Tony Buoi Sang,130000,2017,5
+A06,Suc Manh Tiem Thuc,Joseph Murphy,170000,2001,9
+A07,Luoc Su Thoi Gian,Stephen Hawking,190000,1988,3
+A08,Elon Musk: TeslaSpaceX,Ashlee Vance,250000,2015,8
+a13,asdad,sadasda,15000,2025,1
+a12,lilluyen,anhdep,290000,2025,5
