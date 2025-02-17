@@ -3,10 +3,12 @@
 #include<stdlib.h>
 #include<string.h>
 #include<conio.h>
+#include<windows.h>
 #include"function.h"
 #include"datatype.h"
 void mainmenu(){
 	int choice;
+	setColor(2);
 	printf("\t%5s\n","***Student Management System Using C***");
 	printf("\t%25s\n","CHOOSE YOUR ROLE");
 	printf("%36s\n","======================");
@@ -19,7 +21,7 @@ void mainmenu(){
 	switch(choice){
 		case 1:{
 			system("cls");
-			admin();
+			login();
 			break;
 		}
 //		case 2:{
@@ -36,10 +38,18 @@ void mainmenu(){
 
 
 void login(){
+	setColor(4);
 	char email[50];
 	char pass[20];
-	const char correctEmail[] = "admin";
-	const char correctPass[] = "pass123";
+    char correctEmail[40];
+    char correctPass[20];
+    FILE *file = fopen("admin.txt", "r");
+    if (file == NULL) {
+    perror("Khong the mo file admin.txt");
+    return;
+    }
+    fscanf(file, "%s %s", correctEmail, correctPass);
+    fclose(file);
 	while(1){
 	printf("\n");
 	printf("\t%5s\n","***Library Management System Using C***");
@@ -70,7 +80,8 @@ void login(){
 	pass[mk] = '\0';
     printf("%36s\n","======================\n");
     if(strcmp(email,correctEmail) == 0 && strcmp(pass,correctPass) == 0){
-    	displaybook();
+    	system("cls");
+    	admin();
     	break;
 	}else{
 		printf("Sai mat khau hoac email,vui long nhap lai.");
@@ -84,6 +95,7 @@ void login(){
 
 void displaybook(){
 	system("cls");
+	setColor(6);
 	int choice1;
 	printf("\n=====BookManage=====\n");
 	printf("\n[1]. Hien thi danh sach sach.");
@@ -124,6 +136,11 @@ void displaybook(){
 			system("cls");
 			searchbook();
 			returntomenu();
+			break;
+		}
+		case 6:{
+			system("cls");
+			admin();
 			break;
 		}
 	}
@@ -478,6 +495,7 @@ void searchbook() {
 
 void admin(){
 	int manager;
+	setColor(5);
 	printf("\n");
 	printf("\t%5s\n","***Library Management System Using C***");
     printf("%45s\n","===========ADMINISTRATOR==========");
@@ -488,7 +506,7 @@ void admin(){
     switch(manager){
     	case 1:{
     		system("cls");
-    		login();
+    		displaybook();
 			break;
 		}
 		case 2:{
@@ -501,6 +519,7 @@ void admin(){
 
 void memberlogin(){
 	int clientchoice;
+	setColor(9);
 	printf("\n========MEMBER========\n");
 	printf("\n[1].Hien thi danh sach khach hang.");
 	printf("\n[2].Nhap thong tin khach hang.");
@@ -509,6 +528,7 @@ void memberlogin(){
 	printf("\n[5].Tim kiem khach hang.");
 	printf("\n[6].Muon sach.");
 	printf("\n[7].Tra sach.");
+	printf("\n[8].Thoat giao dien.");
 	printf("\n======================\n");
 	printf("Nhap lua chon cua ban: ");
 	scanf("%d",&clientchoice);
@@ -553,6 +573,11 @@ void memberlogin(){
 			system("cls");
 			returnbook();
 			returntomenu2();
+			break;
+		}
+		case 8:{
+			system("cls");
+			admin();
 			break;
 		}
 	}
@@ -828,43 +853,37 @@ void displaybookwithoutsort(){
 
 void borrow(){
 	displaymember();
-
-    char memberID[10];
-    printf("Nhap ID khach hang muon muon sach: ");
+	displaybookwithoutsort();
+    char memberID[10], bookID[10];
+    int borrowQuantity; 
+    printf("Nhap ID khach hang: ");
     scanf("%s", memberID);
+    printf("Nhap ID sach muon muon: ");
+    scanf("%s", bookID);
+    printf("Nhap so luong sach muon muon: ");
+    scanf("%d", &borrowQuantity);
 
-    FILE *memberFile = fopen("member.txt", "r");
-    if (memberFile == NULL) {
+    FILE *file = fopen("member.txt", "r");
+    if (file == NULL) {
         perror("Khong the mo file member.txt");
         return;
     }
 
     Member members[100];
-    int memberCount = 0;
-    Member *currentMember = NULL;
+    int count = 0;
 
-    while (fscanf(memberFile, "%9[^,],%19[^,],%9[^,\n],%d\n",members[memberCount].memberID,members[memberCount].name,members[memberCount].phone,&members[memberCount].status) == 4) {
-        if (strcmp(members[memberCount].memberID, memberID) == 0) {
-            currentMember = &members[memberCount];
-        }
-        memberCount++;
+    while (fscanf(file, "%9[^,],%19[^,],%9[^,\n],%d\n", 
+                  members[count].memberID, 
+                  members[count].name, 
+                  members[count].phone, 
+                  &members[count].status) == 4) {
+        members[count].borrowedCount = 0;
+        count++;
     }
-    fclose(memberFile);
+    fclose(file);
 
-    if (currentMember == NULL) {
-        printf("Khong tim thay khach hang voi ID: %s\n", memberID);
-        return;
-    }
-
-    if (currentMember->status == 0) {
-        printf("Khach hang bi khoa.Khong the muon sach.\n");
-        return;
-    }
-
-    displaybookwithoutsort();
-
-    FILE *bookFile = fopen("book.txt", "r+");
-    if (bookFile == NULL) {
+    file = fopen("book.txt", "r");
+    if (file == NULL) {
         perror("Khong the mo file book.txt");
         return;
     }
@@ -872,141 +891,199 @@ void borrow(){
     Book books[100];
     int bookCount = 0;
 
-    while (fscanf(bookFile, "%9[^,],%29[^,],%19[^,],%d,%d,%d\n",books[bookCount].bookID,books[bookCount].title,books[bookCount].author,&books[bookCount].price,&books[bookCount].publication.year,&books[bookCount].amountofbook) == 6) {
+    while (fscanf(file, "%10[^,],%30[^,],%20[^,],%d,%d,%d\n", 
+                  books[bookCount].bookID, 
+                  books[bookCount].title, 
+                  books[bookCount].author, 
+                  &books[bookCount].price, 
+                  &books[bookCount].publication.year, 
+                  &books[bookCount].amountofbook) == 6) {
         bookCount++;
     }
+    fclose(file);
 
-    char bookID[10];
-    printf("Nhap ID sach muon muon: ");
-    scanf("%s", bookID);
+    int memberFound = 0, bookFound = 0;
+    for (int i = 0; i < count; i++) {
+        if (strcmp(members[i].memberID, memberID) == 0) {
+            memberFound = 1;
 
-    Book *currentBook = NULL;
-    for (int i = 0; i < bookCount; i++) {
-        if (strcmp(books[i].bookID, bookID) == 0) {
-            currentBook = &books[i];
+            if (members[i].borrowedCount >= 5) {
+                printf("Khach hang da muon toi da 5 quyển sach. Khong the muon them.\n");
+                return;
+            }
+
+            for (int j = 0; j < members[i].borrowedCount; j++) {
+                if (strcmp(members[i].borrowedBooks[j], bookID) == 0) {
+                    printf("Khach hang da muon sach nay.\n");
+                    return;
+                }
+            }
+            for (int j = 0; j < bookCount; j++) {
+                if (strcmp(books[j].bookID, bookID) == 0) {
+                    if (books[j].amountofbook >= borrowQuantity) {
+                        bookFound = 1;
+
+                        books[j].amountofbook -= borrowQuantity;
+                        strcpy(members[i].borrowedBooks[members[i].borrowedCount], bookID);
+                        members[i].borrowedQuantities[members[i].borrowedCount] = borrowQuantity;
+                        members[i].borrowedCount++;
+                        printf("Muon sach %s voi so luong %d thanh cong.\n", books[j].title, borrowQuantity);
+                        break;
+                    } else {
+                        printf("Khong du so luong sach de muon.\n");
+                        return;
+                    }
+                }
+            }
             break;
         }
     }
 
-    if (currentBook == NULL) {
-        printf("Khong tim thay sach voi ID: %s\n", bookID);
-        fclose(bookFile);
+    if (!memberFound) {
+        printf("Khong tim thay khach hang voi ID: %s\n", memberID);
+    } else if (!bookFound) {
+        printf("Khong tim thay sach voi ID: %s.\n", bookID);
+    }
+
+    file = fopen("member.txt", "w");
+    if (file == NULL) {
+        perror("Khong the mo file member.txt");
         return;
     }
 
-    int borrowAmount;
-    printf("Nhap so luong sach muon muon (toi da 5): ");
-    scanf("%d", &borrowAmount);
-
-    if (borrowAmount <= 0 || borrowAmount > 5) {
-        printf("So luong muon phai tu 1 den 5.\n");
-        fclose(bookFile);
-        return;
+    for (int i = 0; i < count; i++) {
+        fprintf(file, "%s,%s,%s,%d\n", members[i].memberID, members[i].name, members[i].phone, members[i].status);
     }
+    fclose(file);
 
-    if (borrowAmount > currentBook->amountofbook) {
-        printf("Khong du so luong sach trong thu vien.\n");
-        fclose(bookFile);
-        return;
-    }
-
-    currentBook->amountofbook -= borrowAmount;
-
-    rewind(bookFile);
-    for (int i = 0; i < bookCount; i++) {
-        fprintf(bookFile,"%s,%s,%s,%d,%d,%d\n",books[i].bookID,books[i].title,books[i].author,books[i].price,books[i].publication.year,books[i].amountofbook);
-    }
-
-    fclose(bookFile);
-
-    printf("Khach hang %s da muon %d quyen sach %s.\n",currentMember->name,borrowAmount,currentBook->title);
-}
-
-
-void returnbook() {
-    displaymember();
-
-    char memberID[10];
-    Member *currentMember = NULL;
-
-    while (currentMember == NULL) {
-        printf("Nhap ID khach hang muon tra sach: ");
-        scanf("%s", memberID);
-
-        FILE *memberFile = fopen("member.txt", "r");
-        if (memberFile == NULL) {
-            perror("Khong the mo file member.txt");
-            return;
-        }
-
-        Member members[100];
-        int memberCount = 0;
-
-        while (fscanf(memberFile, "%9[^,],%19[^,],%9[^,\n],%d\n", members[memberCount].memberID, members[memberCount].name, members[memberCount].phone, &members[memberCount].status) == 4) {
-            if (strcmp(members[memberCount].memberID, memberID) == 0) {
-                currentMember = &members[memberCount];
-            }
-            memberCount++;
-        }
-        fclose(memberFile);
-
-        if (currentMember == NULL) {
-            printf("Khong tim thay khach hang voi ID: %s. Vui long nhap lai.\n", memberID);
-        }
-    }
-
-    char bookID[10];
-    Book *currentBook = NULL;
-    Book books[100];
-    int bookCount = 0;
-
-    while (currentBook == NULL) {
-        printf("Nhap ID sach muon tra: ");
-        scanf("%s", bookID);
-
-        FILE *bookFile = fopen("book.txt", "r+");
-        if (bookFile == NULL) {
-            perror("Khong the mo file book.txt");
-            return;
-        }
-
-        while (fscanf(bookFile, "%9[^,],%29[^,],%19[^,],%d,%d,%d\n", books[bookCount].bookID, books[bookCount].title, books[bookCount].author, &books[bookCount].price, &books[bookCount].publication.year, &books[bookCount].amountofbook) == 6) {
-            if (strcmp(books[bookCount].bookID, bookID) == 0) {
-                currentBook = &books[bookCount];
-            }
-            bookCount++;
-        }
-        fclose(bookFile);
-
-        if (currentBook == NULL) {
-            printf("Khong tim thay sach voi ID: %s. Vui long nhap lai.\n", bookID);
-        }
-    }
-
-    int returnAmount;
-    printf("Nhap so luong sach muon tra: ");
-    scanf("%d", &returnAmount);
-
-    if (returnAmount <= 0) {
-        printf("So luong tra phai lon hon 0.\n");
-        return;
-    }
-
-    currentBook->amountofbook += returnAmount;
-
-    FILE *bookFile = fopen("book.txt", "w");
-    if (bookFile == NULL) {
+    file = fopen("book.txt", "w");
+    if (file == NULL) {
         perror("Khong the mo file book.txt");
         return;
     }
 
     for (int i = 0; i < bookCount; i++) {
-        fprintf(bookFile, "%s,%s,%s,%d,%d,%d\n", books[i].bookID, books[i].title, books[i].author, books[i].price, books[i].publication.year, books[i].amountofbook);
+        fprintf(file, "%s,%s,%s,%d,%d,%d\n", books[i].bookID, books[i].title, books[i].author, books[i].price, books[i].publication.year, books[i].amountofbook);
+    }
+    fclose(file);
+}
+
+void returnbook() {
+    char memberID[10], bookID[10];
+    printf("Nhap ID khach hang: ");
+    scanf("%s", memberID);
+
+    FILE *file = fopen("member.txt", "r");
+    if (file == NULL) {
+        perror("Khong the mo file member.txt");
+        return;
     }
 
-    fclose(bookFile);
+    Member members[100];
+    int count = 0;
 
-    printf("Khach hang %s da tra %d quyen sach %s.\n", currentMember->name, returnAmount, currentBook->title);
+    while (fscanf(file, "%9[^,],%19[^,],%9[^,\n],%d\n", 
+                  members[count].memberID, 
+                  members[count].name, 
+                  members[count].phone, 
+                  &members[count].status) == 4) {
+        members[count].borrowedCount = 0;
+        count++;
+    }
+    fclose(file);
+
+    file = fopen("book.txt", "r");
+    if (file == NULL) {
+        perror("Khong the mo file book.txt");
+        return;
+    }
+
+    Book books[100];
+    int bookCount = 0;
+
+    while (fscanf(file, "%10[^,],%30[^,],%20[^,],%d,%d,%d\n", 
+                  books[bookCount].bookID, 
+                  books[bookCount].title, 
+                  books[bookCount].author, 
+                  &books[bookCount].price, 
+                  &books[bookCount].publication.year, 
+                  &books[bookCount].amountofbook) == 6) {
+        bookCount++;
+    }
+    fclose(file);
+
+    int memberFound = 0;
+    for (int i = 0; i < count; i++) {
+        if (strcmp(members[i].memberID, memberID) == 0) {
+            memberFound = 1;
+            printf("Khach hang %s da muon:\n", members[i].name);
+            for (int j = 0; j < members[i].borrowedCount; j++) {
+                printf(" - ID sach: %s, So luong: %d\n", members[i].borrowedBooks[j], members[i].borrowedQuantities[j]);
+            }
+            break;
+        }
+    }
+
+    if (!memberFound) {
+        printf("Khong tim thay khach hang voi ID: %s\n", memberID);
+        return;
+    }
+
+    printf("Nhap ID sach muon tra: ");
+    scanf("%s", bookID);
+
+    int bookFound = 0;
+    for (int i = 0; i < count; i++) {
+        if (strcmp(members[i].memberID, memberID) == 0) {
+            for (int j = 0; j < members[i].borrowedCount; j++) {
+                if (strcmp(members[i].borrowedBooks[j], bookID) == 0) {
+                    bookFound = 1;
+
+                    for (int k = 0; k < bookCount; k++) {
+                        if (strcmp(books[k].bookID, bookID) == 0) {
+                            books[k].amountofbook += members[i].borrowedQuantities[j];
+                            printf("Tra sach thanh cong: %s\n", books[k].title);
+
+                            for (int l = j; l < members[i].borrowedCount - 1; l++) {
+                                strcpy(members[i].borrowedBooks[l], members[i].borrowedBooks[l + 1]);
+                                members[i].borrowedQuantities[l] = members[i].borrowedQuantities[l + 1];
+                            }
+                            members[i].borrowedCount--;
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+            break;
+        }
+    }
+
+    if (!bookFound) {
+        printf("Khach hang khong muon sach nay.\n");
+    }
+
+    file = fopen("member.txt", "w");
+    if (file == NULL) {
+        perror("Khong the mo file member.txt");
+        return;
+    }
+
+    for (int i = 0; i < count; i++) {
+        fprintf(file, "%s,%s,%s,%d\n", members[i].memberID, members[i].name, members[i].phone, members[i].status);
+    }
+    fclose(file);
+
+    file = fopen("book.txt", "w");
+    if (file == NULL) {
+        perror("Khong the mo file book.txt");
+        return;
+    }
+
+    for (int i = 0; i < bookCount; i++) {
+        fprintf(file, "%s,%s,%s,%d,%d,%d\n", books[i].bookID, books[i].title, books[i].author, books[i].price, books[i].publication.year, books[i].amountofbook);
+    }
+    fclose(file);
 }
 
 void memberstatus() {
@@ -1068,4 +1145,9 @@ void memberstatus() {
         }
         fclose(file);
     }
+}
+
+void setColor(int color) {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleTextAttribute(hConsole, color);
 }
