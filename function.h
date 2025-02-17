@@ -19,3 +19,4 @@ void borrow();
 void displaybookwithoutsort();
 void returnbook();
 void memberstatus();
+void setColor();
