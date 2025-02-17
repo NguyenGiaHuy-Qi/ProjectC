@@ -23,5 +23,8 @@ typedef struct {
 	char memberID[10];
 	char name[20];
 	char phone[10];
-	bool status;
+	int status;
+	char borrowedBooks[10][10];
+    int borrowedCount; 
+    int borrowedQuantities[10];
 }Member;
